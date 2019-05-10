@@ -14,9 +14,8 @@ from rl_coach.graph_managers.graph_manager import ScheduleParameters
 import rl_environments
 
 '''TODO list for this script:
-TODO: Test the reading .csv script to see if the variables come through correctly
 TODO: Add more variables to the opt_params list
-TODO: Connect the .csv values with the actual variables in the network
+TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
@@ -40,7 +39,7 @@ opt_params =   ['actor_layer_1_nodes',
 # Load the newest parameter set #
 #################################
 import pandas as pd
-param_df = pd.read_csv('~/experiments/ddpg_opt/optimization_parameters.csv')
+param_df = pd.read_csv('~/experiments/ddpg_opt_test/optimization_parameters.csv')
 opt_params_dict = param_df.tail(1).to_dict('index')
 opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-index from dict
 # example acces parameter value:
@@ -51,7 +50,7 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 ####################
 
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(1000000)
+schedule_params.improve_steps = EnvironmentSteps(30000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(1)
 schedule_params.heatup_steps = EnvironmentSteps(1000)
@@ -60,34 +59,34 @@ schedule_params.heatup_steps = EnvironmentSteps(1000)
 # Algorithm #
 #############
 algorithm_params = DDPGAlgorithmParameters()
-algorithm_params.discount = 1.0
+algorithm_params.discount = opt_params_dict['discount_factor']
 
 #########
 # Agent #
 #########
 #Exploration Parameters
 exploration_params = OUProcessParameters()
-exploration_params.sigma = 5.0
+exploration_params.sigma = opt_params_dict['exploration_factor']
 #Network Parameters
 #Actor Paramters
 actor_params = DDPGActorNetworkParameters()
-actor_params.learning_rate = 0.05 # 0.075
+actor_params.learning_rate = opt_params_dict['actor_learning_rate'] # 0.075
 #Critic Parameters
 critic_params = DDPGCriticNetworkParameters()
-critic_params.learning_rate = 0.05
+critic_params.learning_rate = opt_params_dict['critic_learning_rate']
 #Agent Parameters
 agent_params = DDPGAgentParameters()
 agent_params.algorithm = algorithm_params
 agent_params.exploration = exploration_params
-#agent_params.network["actor"] = actor_params#, ("critic", critic_params)])
-#agent_params.memory = PrioritizedExperienceReplayParameters()
-agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].scheme = [NoisyNetDense(48)]
-agent_params.network_wrappers['actor'].middleware_parameters.scheme = [NoisyNetDense(64)]
 
-agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].scheme = [NoisyNetDense(48)]
-#agent_params.network_wrappers['critic'].middleware_parameters = LSTMMiddlewareParameters()
-agent_params.network_wrappers['critic'].middleware_parameters.scheme = [NoisyNetDense(48), Dense(48)]
+#Actor 
+agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].scheme = [NoisyNetDense(int(opt_params_dict['actor_layer_1_nodes']))]
+agent_params.network_wrappers['actor'].middleware_parameters.scheme = [NoisyNetDense(int(opt_params_dict['actor_layer_2_nodes']))]
+#Critic
+agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].scheme = EmbedderScheme.Empty
 agent_params.network_wrappers['critic'].input_embedders_parameters['action'].scheme = EmbedderScheme.Empty
+#agent_params.network_wrappers['critic'].middleware_parameters = LSTMMiddlewareParameters()
+agent_params.network_wrappers['critic'].middleware_parameters.scheme = [ NoisyNetDense(int(opt_params_dict['critic_layer_1_nodes'])), NoisyNetDense(int(opt_params_dict['critic_layer_2_nodes']) )]
 
 
 ###############
@@ -98,12 +97,12 @@ env_params = GymVectorEnvironment("VrepBalanceBotNoise-v0")
 #env_params = GymVectorEnvironment("VrepDoubleCartPoleSwingup-v0")
 
 graph_manager = BasicRLGraphManager(agent_params=agent_params, env_params=env_params,
-                                    schedule_params=schedule_params, vis_params=VisualizationParameters(render=False, tensorboard=True))
+                                    schedule_params=schedule_params, vis_params=VisualizationParameters(render=False))
 
 import os
 from rl_coach.base_parameters import TaskParameters, Frameworks
 
-log_path = '~/experiments/ddpg_opt'
+log_path = '~/experiments/ddpg_opt_test'
 if not os.path.exists(log_path):
     os.makedirs(log_path)
     

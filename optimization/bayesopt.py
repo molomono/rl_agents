@@ -18,18 +18,16 @@ import pickle
 ''' List of WIP parts of this script
 TODO: Add a heading to the script, author, date, company etc
 TODO: Test run_ai(params)
-TODO: Add all the functionality to the return_reward() function
-TODO: Check and if necisary create the set_dtypes(params) Function
 TODO: Save the optimizer as a .pickle file
 '''
-
+home_path = os.path.expanduser('~')
 
 
 agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_test'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -60,17 +58,20 @@ param_names = []
 for i in range(len(boundaries[agent])):
     param_names += [boundaries[agent][i]['name']]
 
+
 def return_reward():
-    ''' Loads the latest ~/expirements/*/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
+    ''' Loads the latest ~/experiments/agent_directory/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
     '''
     # Load the names of all *.csv files in directory
-    
-    # Filter list based on most recent edit
-    
+    home_path = os.path.expanduser('~')
+    file_list = os.listdir(home_path+'/experiments/'+agent_opt_dir[agent])
+    # Filter list based on most recent file in list
+    file_list = [k for k in file_list if 'main_level' in k]
+    file_list.sort(key=os.path.getmtime)
     # Load most recent edit
-
+    newest_training_data_dataframe = pd.read_csv(file_list[0])
     # Sum and return all values in the 'Training Reward' column
-    pass
+    return -newest_training_data_dataframe['Training Reward'].sum()
 
 
 def run_ai(param_list):
@@ -78,15 +79,17 @@ def run_ai(param_list):
     '''
     # Load/create the .csv file as a dataframe
     # Append new parameters to dataframe
-
-    try:
-        parameters_dataframe = pd.read_csv('~/expirements/'+ agent_opt_dir[agent] +'optimization_parameters.csv')
-        parameters_dataframe = parameters_dataframe.append( pd.DataFrame([param_list], columns=param_names), ignore_index=True)
-    except Exception:
-        parameters_dataframe = pd.DataFrame([param_list], columns=param_names)
-
+    print(param_names)
+    print(param_list)
+    
+    if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv'):
+        parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
+        parameters_dataframe = parameters_dataframe.append( pd.DataFrame(param_list, columns=param_names), ignore_index=True)
+    else:
+        parameters_dataframe = pd.DataFrame(param_list, columns=param_names)
+        
     # Save the dataframe to .csv
-    parameters_dataframe.to_csv('~/expirements/'+ agent_opt_dir[agent] +'optimization_parameters.csv')
+    parameters_dataframe.to_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
 
     # Start the AI using os.system('python ' + agent_preset[agent]) This python script will wait for the agent to finish. 
     # The AI_opt script will load the parameters from the .csv and perform a training sequence.
@@ -99,25 +102,7 @@ def run_ai(param_list):
     elif exit_flag != 0: 
         print('An error occured while training the AI Agent')
         quit()
-    
-
-
-def set_dtypes(X):
-    ''' Changes the datatypes of the searchspace used by bayes-opt to fit that of tensorflow 
-    '''
-    [e_decay,e_min,gamma,lr,lr_d,BATCH_max,layer1,layer2,layer1_a,layer2_a] = X
-
-    BATCH_max   =   int(BATCH_max)
-    layer1      =   int(layer1)
-    layer2      =   int(layer2)
-    layer1_a    =   int(layer1_a)
-    layer2_a    =   int(layer2_a)
-    layer_activations = ['tanh', 'relu', 'linear']
-
-    h_layers = {'layers':[layer1,layer2], 'activation':[layer_activations[layer1_a], layer_activations[layer2_a]], 'initializer':['he_normal', 'he_normal']}
-
-    return [e_decay,e_min,gamma,lr,lr_d,BATCH_max,layer1,layer2,layer1_a,layer2_a], h_layers
-
+	
 ################### Example function derived from my other repository
 ################### Is being altered to support the new AI Agents
 if __name__=="__main__":
@@ -148,8 +133,3 @@ if __name__=="__main__":
 
     #The estimated optimum is printed and saved to a file
     print("Best performance: ", x_optimum)
-
-    #Save best performance to a file
-    file_name = '~/expirements/'+ agent_opt_dir[agent] +'/Optimzed_performance_variables.csv'
-    df = pd.DataFrame([x_optimum], columns=param_names)
-    df.to_csv(file_name, index=False)
