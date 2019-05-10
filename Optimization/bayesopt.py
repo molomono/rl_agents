@@ -15,6 +15,16 @@ import pickle
 # BayesOpt can be implemented in a completely seperate python file than the AIs themselves, containing domain definitions for the hyperparameter search spaces.
 # Use pandas to append the new parameter selection to xxx_parameters_opt.csv file, and create an argument/function that loads the last row from this file for use when running a new trial.
 
+''' List of WIP parts of this script
+TODO: Add a heading to the script, author, date, company etc
+TODO: Test run_ai(params)
+TODO: Add all the functionality to the return_reward() function
+TODO: Check and if necisary create the set_dtypes(params) Function
+TODO: Save the optimizer as a .pickle file
+'''
+
+
+
 agent = 'ddpg'
 
 #Append new agents to these dictionaries:
@@ -87,7 +97,8 @@ def run_ai(param_list):
         # load the .csv file with the previous execution data and return the sum of training rewards
         return -return_reward()
     elif exit_flag != 0: 
-        exit('An error occured while training the AI Agent')
+        print('An error occured while training the AI Agent')
+        quit()
     
 
 
@@ -122,8 +133,6 @@ if __name__=="__main__":
                                                         model_type= 'GP_MCMC',
                                                         acquisition_type='EI_MCMC',
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
-    
-    
     
     #Run optimizer
     ai_optimizer.run_optimization(max_iter)
