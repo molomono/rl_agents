@@ -19,6 +19,21 @@ agent = 'ddpg'
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
 agent_opt_dir = {'ddpg': 'ddpg_opt'}
 
+
+#TODO: Modify the bounds define the bounding box for the hyperparameters
+boundaries ={ 'ddpg': 
+            [{'name': 'e_d',     'type': 'continuous', 'domain': (0.9,0.9999)},
+            {'name': 'e_m',     'type': 'continuous', 'domain': (0.0,0.05)},
+            {'name': 'gamma',   'type': 'continuous', 'domain': (0.8,1.0)},
+            {'name': 'lr',      'type': 'continuous', 'domain': (0.0,0.05)},
+            {'name': 'lr_d',    'type': 'continuous', 'domain': (0.0,0.05)},
+            {'name': 'b_m',     'type': 'discrete',   'domain': (16, 32, 64, 128, 256)},
+            {'name': 'layer1',  'type': 'discrete',   'domain': (20,24,28,32,36,40)},
+            {'name': 'layer2',  'type': 'discrete',   'domain': (20,24,28,32,36,40)},
+            {'name': 'layer1_a','type': 'categorical','domain': (0,1,2)}, #['tanh','relu','linear']
+            {'name': 'layer2_a','type': 'categorical','domain': (0,1,2)}],
+        }
+
 def return_reward():
     ''' Loads the latest ~/expirements/*/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
     '''
@@ -32,19 +47,20 @@ def run_ai(param_list):
 
     #Start the AI using os.system('python ' + agent_preset[agent]) This python script will wait for the agent to finish. 
     #The AI_opt script will load the parameters from the .csv and perform a training sequence.
-    #exit_flag = os.system('python ' + agent_preset[agent]) 
+    exit_flag = os.system('python ' + agent_preset[agent]) 
 
     #Provided the exit flag choose an appropriate action (was an error raised or was execution normal)
-    if exit_flag:
-        pass
-    elif exit_flag: 
+    if exit_flag == 0:
+        # load the .csv file with the previous execution data and return the sum of training rewards
+        return -return_reward()
+    elif exit_flag != 0: 
         pass
     
-    # load the .csv file with the previous execution data and return the sum of training rewards
-    return -return_reward()
+
 
 def set_dtypes(X):
-    #TEST THIS FUNCTION, should be used to change the datatypes of the domain to the correct datatypes to be used by the wrapper algorithm
+    ''' Changes the datatypes of the searchspace used by bayes-opt to fit that of tensorflow 
+    '''
     [e_decay,e_min,gamma,lr,lr_d,BATCH_max,layer1,layer2,layer1_a,layer2_a] = X
 
     BATCH_max   =   int(BATCH_max)
@@ -62,21 +78,9 @@ def set_dtypes(X):
 ################### Is being altered to support the new AI Agents
 if __name__=="__main__":
 
-    #define the bounding box for the hyperparameters
-    bounds = [  {'name': 'e_d',     'type': 'continuous', 'domain': (0.9,0.9999)},
-                {'name': 'e_m',     'type': 'continuous', 'domain': (0.0,0.05)},
-                {'name': 'gamma',   'type': 'continuous', 'domain': (0.8,1.0)},
-                {'name': 'lr',      'type': 'continuous', 'domain': (0.0,0.05)},
-                {'name': 'lr_d',    'type': 'continuous', 'domain': (0.0,0.05)},
-                {'name': 'b_m',     'type': 'discrete',   'domain': (16, 32, 64, 128, 256)},
-                {'name': 'layer1',  'type': 'discrete',   'domain': (20,24,28,32,36,40)},
-                {'name': 'layer2',  'type': 'discrete',   'domain': (20,24,28,32,36,40)},
-                {'name': 'layer1_a','type': 'categorical','domain': (0,1,2)}, #['tanh','relu','linear']
-                {'name': 'layer2_a','type': 'categorical','domain': (0,1,2)}]
-
     #Configure optimizer and set the number of optimization steps
     max_iter = 25
-    ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=bounds,
+    ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
                                                         initial_design_numdata = 8,   # Number of initial datapoints before optimizing
                                                         Initial_design_type = 'latin',
                                                         model_type= 'GP_MCMC',
@@ -95,6 +99,6 @@ if __name__=="__main__":
     print("Best performance: ", x_optimum)
 
     #Save best performance to a file
-    file_name = '~/expirements/'+agent_opt_dir[preset]+'/Optimzed_performance_variables.csv'
+    file_name = '~/expirements/'+ agent_opt_dir[agent] +'/Optimzed_performance_variables.csv'
     df = pd.DataFrame([x_optimum], columns=bounds[:]['name'])
     df.to_csv(file_name, index=False)
