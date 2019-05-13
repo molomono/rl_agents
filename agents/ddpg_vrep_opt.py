@@ -13,6 +13,8 @@ from rl_coach.graph_managers.graph_manager import ScheduleParameters
 
 import rl_environments
 
+import os
+
 '''TODO list for this script:
 TODO: Add more variables to the opt_params list
 TODO: add more tunable parameters
@@ -39,7 +41,8 @@ opt_params =   ['actor_layer_1_nodes',
 # Load the newest parameter set #
 #################################
 import pandas as pd
-param_df = pd.read_csv('~/experiments/ddpg_opt_test/optimization_parameters.csv')
+home_path = os.path.expanduser('~')
+param_df = pd.read_csv(home_path+'/experiments/ddpg_opt_test/optimization_parameters.csv')
 opt_params_dict = param_df.tail(1).to_dict('index')
 opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-index from dict
 # example acces parameter value:
@@ -54,6 +57,11 @@ schedule_params.improve_steps = EnvironmentSteps(30000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(1)
 schedule_params.heatup_steps = EnvironmentSteps(1000)
+
+#For testing the opt software sequencing run very short cycles
+#schedule_params.improve_steps = EnvironmentSteps(10)
+#schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(2)
+#schedule_params.heatup_steps = EnvironmentSteps(0)
 
 #############
 # Algorithm #
@@ -102,7 +110,7 @@ graph_manager = BasicRLGraphManager(agent_params=agent_params, env_params=env_pa
 import os
 from rl_coach.base_parameters import TaskParameters, Frameworks
 
-log_path = '~/experiments/ddpg_opt_test'
+log_path = home_path+'/experiments/ddpg_opt_test'
 if not os.path.exists(log_path):
     os.makedirs(log_path)
     
@@ -116,3 +124,4 @@ task_parameters.__dict__['verbosity'] = 'low'
 graph_manager.create_graph(task_parameters)
 
 graph_manager.improve()
+graph_manager.close()

@@ -67,9 +67,9 @@ def return_reward():
     file_list = os.listdir(home_path+'/experiments/'+agent_opt_dir[agent])
     # Filter list based on most recent file in list
     file_list = [k for k in file_list if 'main_level' in k]
-    file_list.sort(key=os.path.getmtime)
+    #file_list.sort(key=os.path.getmtime)
     # Load most recent edit
-    newest_training_data_dataframe = pd.read_csv(file_list[0])
+    newest_training_data_dataframe = pd.read_csv(home_path+'/experiments/'+agent_opt_dir[agent]+'/'+file_list[-1])
     # Sum and return all values in the 'Training Reward' column
     return -newest_training_data_dataframe['Training Reward'].sum()
 
@@ -89,19 +89,21 @@ def run_ai(param_list):
         parameters_dataframe = pd.DataFrame(param_list, columns=param_names)
         
     # Save the dataframe to .csv
-    parameters_dataframe.to_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
+    parameters_dataframe.to_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv', index=False)
 
     # Start the AI using os.system('python ' + agent_preset[agent]) This python script will wait for the agent to finish. 
     # The AI_opt script will load the parameters from the .csv and perform a training sequence.
     exit_flag = os.system('python ../agents/' + agent_preset[agent]) 
 
+    return -return_reward()
+	#TODO: Fix the script below
     # Provided the exit flag choose an appropriate action (was an error raised or was execution normal)
-    if exit_flag == 0:
+    #if exit_flag == 0:
         # load the .csv file with the previous execution data and return the sum of training rewards
-        return -return_reward()
-    elif exit_flag != 0: 
-        print('An error occured while training the AI Agent')
-        quit()
+    #    return -return_reward()
+    #elif exit_flag != 0: 
+    #    print('An error occured while training the AI Agent')
+    #    quit()
 	
 ################### Example function derived from my other repository
 ################### Is being altered to support the new AI Agents
@@ -111,12 +113,12 @@ if __name__=="__main__":
     '''
 
     #Configure optimizer and set the number of optimization steps
-    max_iter = 25
+    max_iter = 3
     ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
-                                                        initial_design_numdata = 8,   # Number of initial datapoints before optimizing
+                                                        initial_design_numdata = 4,   # Number of initial datapoints before optimizing
                                                         Initial_design_type = 'latin',
                                                         model_type= 'GP_MCMC',
-                                                        acquisition_type='EI_MCMC',
+                                                        acquisition_type='MPI_MCMC',
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
     
     #Run optimizer
@@ -129,7 +131,8 @@ if __name__=="__main__":
     print('TODO: Save optimizer class to pickle file')
 
     # All the hyperparameters come out of the optimization as float64 set_dtypes corrects the datatypes
-    [x_optimum, h_layers] = set_dtypes(ai_optimizer.x_opt)
+    x_optimum = ai_optimizer.x_opt
 
     #The estimated optimum is printed and saved to a file
-    print("Best performance: ", x_optimum)
+    print("Parameter names : ", param_names)
+    print("Best params     : ", x_optimum)
