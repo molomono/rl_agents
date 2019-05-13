@@ -8,12 +8,14 @@ import os
 import glob
 import pickle
 
-# The logged parameters are writtent o .CSV so i can access these from the python pandas library easily. 
+# The logged parameters are written to a .CSV so i can access these from the python pandas library easily. 
 # .jsons are saved to the directory containing the information regarding initialization each agent.
 # In the RL scheduler i can set max amount of steps to run, initially this will be set to allow for roughly 1 hour of training.
 # The sum of the 'Total Reward' column is a measurement of total performance.
-# BayesOpt can be implemented in a completely seperate python file than the AIs themselves, containing domain definitions for the hyperparameter search spaces.
-# Use pandas to append the new parameter selection to xxx_parameters_opt.csv file, and create an argument/function that loads the last row from this file for use when running a new trial.
+# BayesOpt can be implemented in a completely seperate python file than the AIs themselves, 
+# containing domain definitions for the hyperparameter search spaces.
+# Use pandas to append the new parameter selection to xxx_parameters_opt.csv file, and create an 
+# argument/function that loads the last row from this file for use when running a new trial.
 
 ''' List of WIP parts of this script
 TODO: Add a heading to the script, author, date, company etc
@@ -67,11 +69,14 @@ def return_reward():
     file_list = os.listdir(home_path+'/experiments/'+agent_opt_dir[agent])
     # Filter list based on most recent file in list
     file_list = [k for k in file_list if 'main_level' in k]
-    #file_list.sort(key=os.path.getmtime)
+    # Append the directory location to the file_names
+    for i in range(len(file_list)):
+        file_list[i] = home_path+'/experiments/'+agent_opt_dir[agent]+'/'+file_list[i]	
+    file_list.sort(key=os.path.getmtime)
     # Load most recent edit
-    newest_training_data_dataframe = pd.read_csv(home_path+'/experiments/'+agent_opt_dir[agent]+'/'+file_list[-1])
-    # Sum and return all values in the 'Training Reward' column
-    return -newest_training_data_dataframe['Training Reward'].sum()
+    newest_training_data_dataframe = pd.read_csv(file_list[-1])
+    # Sum-up and return all values in the 'Training Reward' column
+    return newest_training_data_dataframe['Training Reward'].sum()
 
 
 def run_ai(param_list):
@@ -113,12 +118,13 @@ if __name__=="__main__":
     '''
 
     #Configure optimizer and set the number of optimization steps
-    max_iter = 3
+    max_iter = 5
     ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
-                                                        initial_design_numdata = 4,   # Number of initial datapoints before optimizing
+                                                        initial_design_numdata = 7,   # Number of initial datapoints before optimizing
                                                         Initial_design_type = 'latin',
                                                         model_type= 'GP_MCMC',
                                                         acquisition_type='MPI_MCMC',
+                                                        maximize = True,
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
     
     #Run optimizer

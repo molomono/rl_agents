@@ -53,7 +53,7 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 ####################
 
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(30000)
+schedule_params.improve_steps = EnvironmentSteps(15000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(1)
 schedule_params.heatup_steps = EnvironmentSteps(1000)
