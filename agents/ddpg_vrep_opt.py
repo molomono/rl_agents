@@ -21,7 +21,7 @@ TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
-log_files_dir = 'ddpg_opt_1'
+log_files_dir = 'ddpg_opt_2'
 
 ################################
 # Optimizable parameters list: #

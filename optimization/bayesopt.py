@@ -38,7 +38,7 @@ agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_1'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_2'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -172,7 +172,7 @@ if __name__=="__main__":
     within the search domain defined in the boundaries dict.
     '''
     #Define the number of optimization iterations to run.
-    initial_datapoints = 5
+    initial_datapoints = 9
     max_iter = 25
     X = None
     Y = None
@@ -199,9 +199,15 @@ if __name__=="__main__":
         X = load_params_of_all_trials()
         
         print('Dimensions X: {},  Y: {}'.format(X.shape,Y.shape))
-        #Set the initial datapoints to 0 because a prior dataset already exists. 
-        initial_datapoints = 0
-	
+        if X.shape[0] is 0 and Y.shape[0] is 0:
+            X = None
+            Y = None
+        elif X.shape[0] < initial_datapoints:
+            #Subtract the number of existing datapoints if a prior dataset already exists, otherwise set it to zero. 
+            initial_datapoints = initial_datapoints - X.shape[0]
+        else:
+            initial_datapoints = 0
+			
     #Configure optimizer and set the number of optimization steps
     ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
                                                         initial_design_numdata = initial_datapoints,   # Number of initial datapoints before optimizing
