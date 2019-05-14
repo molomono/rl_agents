@@ -109,7 +109,8 @@ def run_ai(param_list):
         parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
         parameters_dataframe = parameters_dataframe.append( pd.DataFrame(param_list, columns=param_names), ignore_index=True)
     else:
-        os.mkdir(home_path + '/experiments/'+ agent_opt_dir[agent])
+        if not os.path.exists(home_path + '/experiments/'+ agent_opt_dir[agent]):
+            os.mkdir(home_path + '/experiments/'+ agent_opt_dir[agent])
         parameters_dataframe = pd.DataFrame(param_list, columns=param_names)
         
     # Save the dataframe to .csv
@@ -146,7 +147,12 @@ if __name__=="__main__":
     Y = None
 	
     #If there are alerady .csv files in the project folder load the dataset X, Y and change the initial deisng numtypes to 0
-    if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv'):
+    if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv') and True:
+		print('WARNING----------TODO-----------WARNING')
+		print('Important notice, the prior trials are loaded but if a trial was executed during training')
+		print('it must be manually removed from the folder, both the log file and the last row in the parameters.csv file')
+		print('')
+		print('This is due to the fitness of that iteration not being representative for the those parameters, it will skew the predictions if not removed.')
         Y = return_reward(return_all_trials = True)
         X = load_params_of_all_trials()
         initial_datapoints = 0
@@ -171,6 +177,6 @@ if __name__=="__main__":
     # All the hyperparameters come out of the optimization as float64 set_dtypes corrects the datatypes
     x_optimum = ai_optimizer.x_opt
 
-    #The estimated optimum is printed and saved to a file
+    #The estimated optimum after training is printed
     print("Parameter names : ", param_names)
     print("Best params     : ", x_optimum)
