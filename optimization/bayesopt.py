@@ -19,8 +19,10 @@ import pickle
 
 ''' List of WIP parts of this script
 TODO: Add a heading to the script, author, date, company etc
+TODO: Figure out and implement load previous training dataset into the optimizer
 TODO: Test run_ai(params)
-TODO: Save the optimizer as a .pickle file
+TONOTDO: Save the optimizer as a .pickle file, cannot be done and the internal save function is fine but there is no load function so save X and Y directly to a .csv and load it back if you want to reuse it.
+TODO: TEST (Y = return_reward(return_all_trials=True), X = load_params_of_all_trials() ) to append an X and Y data list from an existing project folder,
 '''
 home_path = os.path.expanduser('~')
 
@@ -29,7 +31,7 @@ agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_test'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_1'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -52,7 +54,8 @@ boundaries ={'example':
                 {'name': 'discount_factor',         'type': 'continuous', 'domain': (0.8,1.0)}, 
                 {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.0001, 0.1)}, 
                 {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.1)}, 
-                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.5,10.0)}],
+                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.5,10.0)},
+                {'name': 'polyak',      			'type': 'continuous', 'domain': (0.001,0.5)}],
             }
 
 #Retrieve the names of all the parameter variables being tuned:
@@ -61,7 +64,7 @@ for i in range(len(boundaries[agent])):
     param_names += [boundaries[agent][i]['name']]
 
 
-def return_reward():
+def return_reward(return_all_trials = False):
     ''' Loads the latest ~/experiments/agent_directory/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
     '''
     # Load the names of all *.csv files in directory
@@ -71,12 +74,22 @@ def return_reward():
     file_list = [k for k in file_list if 'main_level' in k]
     # Append the directory location to the file_names
     for i in range(len(file_list)):
-        file_list[i] = home_path+'/experiments/'+agent_opt_dir[agent]+'/'+file_list[i]	
+        file_list[i] = home_path+'/experiments/'+agent_opt_dir[agent]+'/'+file_list[i]
+    #Sort the files based on the time of modification
     file_list.sort(key=os.path.getmtime)
-    # Load most recent edit
-    newest_training_data_dataframe = pd.read_csv(file_list[-1])
-    # Sum-up and return all values in the 'Training Reward' column
-    return newest_training_data_dataframe['Training Reward'].sum()
+    if return_all_trials:
+        #TODO: TEST THIS BRANCH OF THE RETURN REWARD FUNCTION
+        Y = []
+        for file_location in file_list:				
+            newest_training_data_dataframe = pd.read_csv(file_location)
+            # Sum-up and return all values in the 'Training Reward' column
+            Y += [newest_training_data_dataframe['Training Reward'].sum()]
+        return Y
+    else:
+        # Load most recent edit
+        newest_training_data_dataframe = pd.read_csv(file_list[-1])
+        # Sum-up and return all values in the 'Training Reward' column
+        return newest_training_data_dataframe['Training Reward'].sum()
 
 
 def run_ai(param_list):
@@ -91,6 +104,7 @@ def run_ai(param_list):
         parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
         parameters_dataframe = parameters_dataframe.append( pd.DataFrame(param_list, columns=param_names), ignore_index=True)
     else:
+        os.mkdir(home_path + '/experiments/'+ agent_opt_dir[agent])
         parameters_dataframe = pd.DataFrame(param_list, columns=param_names)
         
     # Save the dataframe to .csv
@@ -110,20 +124,36 @@ def run_ai(param_list):
     #    print('An error occured while training the AI Agent')
     #    quit()
 	
-################### Example function derived from my other repository
-################### Is being altered to support the new AI Agents
+def load_params_of_all_trials():
+	''' Load all the hyperparameters from the params.csv file and return them as a numpy array
+	'''
+	parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
+	return parameters_dataframe.values
+
 if __name__=="__main__":
     ''' Main function instantiates a gaussian process optimizer from the GPyOpt package and performs Bayesian Optimization
     within the search domain defined in the boundaries dict.
     '''
-
+    #Define the number of optimization iterations to run.
+    initial_datapoints = 5
+    max_iter = 25
+    X = None
+    Y = None
+	
+    #If there are alerady .csv files in the project folder load the dataset X, Y and change the initial deisng numtypes to 0
+    if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv'):
+        Y = return_reward(return_all_trials = True)
+        X = load_params_of_all_trials()
+        initial_datapoints = 0
+	
     #Configure optimizer and set the number of optimization steps
-    max_iter = 5
     ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
-                                                        initial_design_numdata = 7,   # Number of initial datapoints before optimizing
+                                                        initial_design_numdata = initial_datapoints,   # Number of initial datapoints before optimizing
+                                                        X = X,
+                                                        Y = Y,
                                                         Initial_design_type = 'latin',
                                                         model_type= 'GP_MCMC',
-                                                        acquisition_type='MPI_MCMC',
+                                                        acquisition_type='EI_MCMC',
                                                         maximize = True,
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
     
@@ -132,9 +162,6 @@ if __name__=="__main__":
 
     # Evaluate using ai_optimizer.plot_convergence()
     ai_optimizer.plot_convergence()
-
-    #Save the optimizer to pickle file, this is to backup the progress if optimization can continue
-    print('TODO: Save optimizer class to pickle file')
 
     # All the hyperparameters come out of the optimization as float64 set_dtypes corrects the datatypes
     x_optimum = ai_optimizer.x_opt

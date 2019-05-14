@@ -31,7 +31,8 @@ opt_params =   ['actor_layer_1_nodes',
 				'discount_factor', 
 				'actor_learning_rate', 
 				'critic_learning_rate', 
-				'exploration_factor', #Syncrhonized up to this value with the optimizer
+				'exploration_factor', 
+				'polyak', #Syncrhonized up to this value with the optimizer
 				'actor_layer_1_noisy', # these are boolean and turn on and off the noisynetdense layers
 				'actor_layer_2_noisy',
 				'critic_layer_1_noisy',
@@ -42,7 +43,7 @@ opt_params =   ['actor_layer_1_nodes',
 #################################
 import pandas as pd
 home_path = os.path.expanduser('~')
-param_df = pd.read_csv(home_path+'/experiments/ddpg_opt_test/optimization_parameters.csv')
+param_df = pd.read_csv(home_path+'/experiments/ddpg_opt_1/optimization_parameters.csv')
 opt_params_dict = param_df.tail(1).to_dict('index')
 opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-index from dict
 # example acces parameter value:
@@ -68,6 +69,7 @@ schedule_params.heatup_steps = EnvironmentSteps(1000)
 #############
 algorithm_params = DDPGAlgorithmParameters()
 algorithm_params.discount = opt_params_dict['discount_factor']
+algorithm_params.rate_for_copying_weights_to_target = opt_params_dict['polyak']
 
 #########
 # Agent #
@@ -89,12 +91,12 @@ agent_params.exploration = exploration_params
 
 #Actor 
 agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].scheme = [NoisyNetDense(int(opt_params_dict['actor_layer_1_nodes']))]
-agent_params.network_wrappers['actor'].middleware_parameters.scheme = [NoisyNetDense(int(opt_params_dict['actor_layer_2_nodes']))]
+agent_params.network_wrappers['actor'].middleware_parameters.scheme = [Dense(int(opt_params_dict['actor_layer_2_nodes']))]
 #Critic
 agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].scheme = EmbedderScheme.Empty
 agent_params.network_wrappers['critic'].input_embedders_parameters['action'].scheme = EmbedderScheme.Empty
 #agent_params.network_wrappers['critic'].middleware_parameters = LSTMMiddlewareParameters()
-agent_params.network_wrappers['critic'].middleware_parameters.scheme = [ NoisyNetDense(int(opt_params_dict['critic_layer_1_nodes'])), NoisyNetDense(int(opt_params_dict['critic_layer_2_nodes']) )]
+agent_params.network_wrappers['critic'].middleware_parameters.scheme = [ NoisyNetDense(int(opt_params_dict['critic_layer_1_nodes'])), Dense(int(opt_params_dict['critic_layer_2_nodes']) )]
 
 
 ###############
