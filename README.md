@@ -13,7 +13,7 @@ Find optimal hyperparameters using the following equation:
 
 <img src="./images/equations/hyperparameter_tuning.svg">
 
-f(x) is defined as the sum of 'Total rewards' for all episodes in a training cycle. 
+<img src="./images/equations/func.svg"> is defined as the sum of 'Total rewards' for all episodes in a training cycle. 
 Here are some reasons for this:
 - Very Easy to implement
 - Optimizes for faster learning
