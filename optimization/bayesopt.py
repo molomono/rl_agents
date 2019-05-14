@@ -1,4 +1,9 @@
-print("Add author name, company and license information")
+##########################################################
+## Author: Brian Armstrong								##
+## Company: DEMCON 										##
+## Function: Graduation Assignment, RL-AI in robotics	##
+## Date: 05-2019										##
+##########################################################
 
 import pandas as pd 
 import numpy as np 
