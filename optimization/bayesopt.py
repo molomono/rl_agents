@@ -6,12 +6,14 @@
 ##########################################################
 
 import pandas as pd 
+import sys
 import numpy as np 
 import GPyOpt
 import GPy
 import os
 import glob
 import pickle
+import time
 
 # The logged parameters are written to a .CSV so i can access these from the python pandas library easily. 
 # .jsons are saved to the directory containing the information regarding initialization each agent.
@@ -73,9 +75,8 @@ def return_reward(return_all_trials = False):
     ''' Loads the latest ~/experiments/agent_directory/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
     '''
     # Load the names of all *.csv files in directory
-    home_path = os.path.expanduser('~')
     file_list = os.listdir(home_path+'/experiments/'+agent_opt_dir[agent])
-    # Filter list based on most recent file in list
+    # Filter list only log files remain
     file_list = [k for k in file_list if 'main_level' in k]
     # Append the directory location to the file_names
     for i in range(len(file_list)):
@@ -88,8 +89,8 @@ def return_reward(return_all_trials = False):
         for file_location in file_list:				
             newest_training_data_dataframe = pd.read_csv(file_location)
             # Sum-up and return all values in the 'Training Reward' column
-            Y += [newest_training_data_dataframe['Training Reward'].sum()]
-        return Y
+            Y += [[newest_training_data_dataframe['Training Reward'].sum()]]
+        return np.asarray(Y)
     else:
         # Load most recent edit
         newest_training_data_dataframe = pd.read_csv(file_list[-1])
@@ -120,21 +121,51 @@ def run_ai(param_list):
     # The AI_opt script will load the parameters from the .csv and perform a training sequence.
     exit_flag = os.system('python ../agents/' + agent_preset[agent]) 
 
-    return -return_reward()
-	#TODO: Fix the script below
     # Provided the exit flag choose an appropriate action (was an error raised or was execution normal)
-    #if exit_flag == 0:
-        # load the .csv file with the previous execution data and return the sum of training rewards
-    #    return -return_reward()
-    #elif exit_flag != 0: 
-    #    print('An error occured while training the AI Agent')
-    #    quit()
+    if exit_flag == 0:
+       # load the .csv file with the previous execution data and return the sum of training rewards
+       return return_reward()
+    elif exit_flag != 0: 
+        print('An error occured while training the AI Agent')
+        remove_failed_optimization_iteration()
+        quit()
 	
 def load_params_of_all_trials():
 	''' Load all the hyperparameters from the params.csv file and return them as a numpy array
 	'''
 	parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
 	return parameters_dataframe.values
+
+def remove_failed_optimization_iteration(remove_param = True, remove_log_arg = False):
+    ''' When an iteration fails it leaves behind a log file that isn't complete, it can still be used to draw the sum of total rewards but 
+    doing this will skew the hyperparameter predictions in a bad way.
+	
+    This function is used to delete the incomplete .csv file and alter the parameters.csv file to remove the last row.
+    '''
+    num_iterations = 0
+    if remove_param:
+        #Load parameters.csv 
+        parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
+        pd.DataFrame(parameters_dataframe.values[:-1,:], columns=param_names).to_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv', index=False)
+        #Number of iterations remaining after deleting the previous entry
+        num_iterations = len(parameters_dataframe)-1
+  
+    # Load the names of all *.csv files in directory
+    file_list = os.listdir(home_path+'/experiments/'+agent_opt_dir[agent])
+    # Filter list only log files remain
+    file_list = [k for k in file_list if 'main_level' in k]
+    num_log_files = len(file_list)
+    
+    # If the number of log files is more than the parameter entries remove the newest log file
+    remove_log = num_log_files > num_iterations
+    if remove_log or remove_log_arg:     
+        # Append the directory location to the file_names
+        for i in range(len(file_list)):
+            file_list[i] = home_path+'/experiments/'+agent_opt_dir[agent]+'/'+file_list[i]
+        #Sort the files based on the time of modification
+        file_list.sort(key=os.path.getmtime)
+        #Remove the last log file
+        os.remove(file_list[-1])
 
 if __name__=="__main__":
     ''' Main function instantiates a gaussian process optimizer from the GPyOpt package and performs Bayesian Optimization
@@ -147,14 +178,28 @@ if __name__=="__main__":
     Y = None
 	
     #If there are alerady .csv files in the project folder load the dataset X, Y and change the initial deisng numtypes to 0
-    if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv') and True:
-		print('WARNING----------TODO-----------WARNING')
-		print('Important notice, the prior trials are loaded but if a trial was executed during training')
-		print('it must be manually removed from the folder, both the log file and the last row in the parameters.csv file')
-		print('')
-		print('This is due to the fitness of that iteration not being representative for the those parameters, it will skew the predictions if not removed.')
+    if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv'):
+        
+        #TODO: Use the argument --remove-last to remove the last logged iteration
+        if any('--remove-last' in s for s in sys.argv):
+            #Function deals with the problem caused by having an incomplete log file due to crashing of a training iteration.
+            remove_param = any('param' in s for s in sys.argv)
+            remove_log = any('log' in s for s in sys.argv)
+            print(remove_log, remove_param)
+
+            remove_failed_optimization_iteration(remove_param, remove_log)
+        else:
+            #print('WARNING---------------------WARNING')
+            #print('Important notice, the prior trials are loaded but if a trial was executed during training')
+            #print('run this script once with .py script with argument --remove-last param and/or log')
+            #time.sleep(10)
+            pass
+           
         Y = return_reward(return_all_trials = True)
         X = load_params_of_all_trials()
+        
+        print('Dimensions X: {},  Y: {}'.format(X.shape,Y.shape))
+        #Set the initial datapoints to 0 because a prior dataset already exists. 
         initial_datapoints = 0
 	
     #Configure optimizer and set the number of optimization steps
