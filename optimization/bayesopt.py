@@ -19,7 +19,10 @@ import time
 TODO: move all the definitions such as boundaries and paths to a seperate .py file
 TODO: move all the functions to a seperate .py file
 
-TODO: In my last test the new inferred datapoints stopped varying for some reason
+TODO: In my last test the new inferred datapoints stopped varying for some reason:
+	-- After taking a look at the training data it seems that there is too little improvement and too 
+	much variance in the environment for the gaussian process to establish a good prediction for better hyperparams. 
+	--> Now testing in gym environments --> After validating this script works  fix the envrionment.
 
 '''
 home_path = os.path.expanduser('~')
@@ -51,7 +54,7 @@ boundaries ={'example':
                 {'name': 'discount_factor',         'type': 'continuous', 'domain': (0.8,1.0)}, 
                 {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.0001, 0.1)}, 
                 {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.1)}, 
-                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.5,10.0)},
+                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.5,6.0)},
                 {'name': 'polyak',      			'type': 'continuous', 'domain': (0.001,0.5)}],
             }
 
@@ -120,11 +123,14 @@ def run_ai(param_list):
         remove_failed_optimization_iteration()
         quit()
 	
-def load_params_of_all_trials():
+def load_params_of_all_trials(return_dataframe = False):
 	''' Load all the hyperparameters from the params.csv file and return them as a numpy array
 	'''
 	parameters_dataframe = pd.read_csv(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv')
-	return parameters_dataframe.values
+	if return_dataframe:
+		return parameters_dataframe
+	else:
+		return parameters_dataframe.values
 
 def remove_failed_optimization_iteration(remove_param = True, remove_log_arg = False):
     ''' When an iteration fails it leaves behind a log file that isn't complete, it can still be used to draw the sum of total rewards but 

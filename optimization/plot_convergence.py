@@ -11,17 +11,6 @@ import pandas as pd
 
 from bayesopt import return_reward, load_params_of_all_trials
 
-
-home_path = os.path.expanduser('~')
-
-
-agent = 'ddpg'
-
-#Append new agents to these dictionaries:
-agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_2'}
-
-
 def plot_convergence(Xdata,best_Y, filename = None):
     '''
     Plots to evaluate the convergence of standard Bayesian optimization algorithms
@@ -54,7 +43,9 @@ def plot_convergence(Xdata,best_Y, filename = None):
         
         
 if __name__ == '__main__':
-    x_params = load_params_of_all_trials()
-    print(pd.DataFrame(x_params))
+    y_vals = return_reward(True)
+    x_params = load_params_of_all_trials(return_dataframe=True)
+    x_params['Traing Rewards'] = y_vals
+    print(x_params)
 	
-    plot_convergence(x_params, return_reward(True))
+    plot_convergence(x_params.values, y_vals)
