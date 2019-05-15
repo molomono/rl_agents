@@ -15,30 +15,20 @@ import glob
 import pickle
 import time
 
-# The logged parameters are written to a .CSV so i can access these from the python pandas library easily. 
-# .jsons are saved to the directory containing the information regarding initialization each agent.
-# In the RL scheduler i can set max amount of steps to run, initially this will be set to allow for roughly 1 hour of training.
-# The sum of the 'Total Reward' column is a measurement of total performance.
-# BayesOpt can be implemented in a completely seperate python file than the AIs themselves, 
-# containing domain definitions for the hyperparameter search spaces.
-# Use pandas to append the new parameter selection to xxx_parameters_opt.csv file, and create an 
-# argument/function that loads the last row from this file for use when running a new trial.
-
 ''' List of WIP parts of this script
-TODO: Add a heading to the script, author, date, company etc
-TODO: Figure out and implement load previous training dataset into the optimizer
-TODO: Test run_ai(params)
-TONOTDO: Save the optimizer as a .pickle file, cannot be done and the internal save function is fine but there is no load function so save X and Y directly to a .csv and load it back if you want to reuse it.
-TODO: TEST (Y = return_reward(return_all_trials=True), X = load_params_of_all_trials() ) to append an X and Y data list from an existing project folder,
+TODO: move all the definitions such as boundaries and paths to a seperate .py file
+TODO: move all the functions to a seperate .py file
+
+TODO: In my last test the new inferred datapoints stopped varying for some reason
+
 '''
 home_path = os.path.expanduser('~')
-
 
 agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_2'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters

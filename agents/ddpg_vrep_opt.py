@@ -21,7 +21,7 @@ TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
-log_files_dir = 'ddpg_opt_2'
+log_files_dir = 'ddpg_opt_gymtest'
 
 ################################
 # Optimizable parameters list: #
@@ -56,15 +56,15 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 ####################
 
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(15000)
+schedule_params.improve_steps = EnvironmentSteps(25000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(1)
 schedule_params.heatup_steps = EnvironmentSteps(1000)
 
 #For testing the opt software sequencing run very short cycles
-schedule_params.improve_steps = EnvironmentSteps(40)
-schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
-schedule_params.heatup_steps = EnvironmentSteps(10)
+#schedule_params.improve_steps = EnvironmentSteps(40)
+#schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
+#schedule_params.heatup_steps = EnvironmentSteps(10)
 
 #############
 # Algorithm #
@@ -104,7 +104,7 @@ agent_params.network_wrappers['critic'].middleware_parameters.scheme = [ NoisyNe
 ###############
 # Environment #
 ###############
-env_params = GymVectorEnvironment("VrepBalanceBotNoise-v0")
+env_params = GymVectorEnvironment("Pendulum-v0")
 #env_params = GymVectorEnvironment("VrepHopper-v0")
 #env_params = GymVectorEnvironment("VrepDoubleCartPoleSwingup-v0")
 
