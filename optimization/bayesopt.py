@@ -23,7 +23,10 @@ TODO: In my last test the new inferred datapoints stopped varying for some reaso
 	-- After taking a look at the training data it seems that there is too little improvement and too 
 	much variance in the environment for the gaussian process to establish a good prediction for better hyperparams. 
 	--> Now testing in gym environments --> After validating this script works  fix the envrionment.
-
+IMPORTANT:
+	--> It looks like after it takes all the init-datapoints it didn't start the sequence of modeling and infering, it just provided the same prediction step after step 
+	I NEED TO FIX THIS^^^
+	Weirdly enough it hangs up on predicting the same parameters that were used for the initial trial.
 '''
 home_path = os.path.expanduser('~')
 
@@ -31,7 +34,7 @@ agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest_2'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -48,13 +51,15 @@ boundaries ={'example':
                 {'name': 'layer2_a','type': 'categorical','domain': (0,1,2)}], 
             'ddpg':
                 [{'name': 'actor_layer_1_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
-                {'name': 'actor_layer_2_nodes',     'type': 'discrete',   'domain': (16, 32, 64, 128, 256)}, 
+                {'name': 'actor_layer_2_nodes',     'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
+                {'name': 'actor_layer_3_nodes',     'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
                 {'name': 'critic_layer_1_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
-                {'name': 'critic_layer_2_nodes',    'type': 'discrete',   'domain': (16, 32, 64, 128, 256)}, 
+                {'name': 'critic_layer_2_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
+                {'name': 'critic_layer_3_nodes',    'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
                 {'name': 'discount_factor',         'type': 'continuous', 'domain': (0.8,1.0)}, 
                 {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.0001, 0.1)}, 
                 {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.1)}, 
-                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.5,6.0)},
+                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.1,3.0)},
                 {'name': 'polyak',      			'type': 'continuous', 'domain': (0.001,0.5)}],
             }
 
@@ -168,7 +173,7 @@ if __name__=="__main__":
     within the search domain defined in the boundaries dict.
     '''
     #Define the number of optimization iterations to run.
-    initial_datapoints = 9
+    initial_datapoints = 5
     max_iter = 25
     X = None
     Y = None
@@ -179,9 +184,8 @@ if __name__=="__main__":
         #TODO: Use the argument --remove-last to remove the last logged iteration
         if any('--remove-last' in s for s in sys.argv):
             #Function deals with the problem caused by having an incomplete log file due to crashing of a training iteration.
-            remove_param = any('param' in s for s in sys.argv)
-            remove_log = any('log' in s for s in sys.argv)
-            print(remove_log, remove_param)
+            remove_param = any('X' in s for s in sys.argv)
+            remove_log = any('Y' in s for s in sys.argv)
 
             remove_failed_optimization_iteration(remove_param, remove_log)
         else:
@@ -203,7 +207,9 @@ if __name__=="__main__":
             initial_datapoints = initial_datapoints - X.shape[0]
         else:
             initial_datapoints = 0
-			
+	
+    print("Number of initial datapoints before Bayesian Optimization: {}".format(initial_datapoints))
+	
     #Configure optimizer and set the number of optimization steps
     ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
                                                         initial_design_numdata = initial_datapoints,   # Number of initial datapoints before optimizing
@@ -213,10 +219,15 @@ if __name__=="__main__":
                                                         model_type= 'GP_MCMC',
                                                         acquisition_type='EI_MCMC',
                                                         maximize = True,
+                                                        verbosity = True,
+                                                        verbosity_model = True,
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
+    print(ai_optimizer.model.model)
     
     #Run optimizer
-    ai_optimizer.run_optimization(max_iter)
+    for _ in range(max_iter):
+        ai_optimizer.run_optimization(1)
+        print(ai_optimizer.model.model)
 
     # Evaluate using ai_optimizer.plot_convergence()
     ai_optimizer.plot_convergence()

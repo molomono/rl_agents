@@ -21,24 +21,35 @@ TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
-log_files_dir = 'ddpg_opt_gymtest'
+log_files_dir = 'ddpg_opt_gymtest_2'
 
 ################################
 # Optimizable parameters list: #
 ################################
 opt_params =   ['actor_layer_1_nodes', 
-				'actor_layer_2_nodes', 
+				'actor_layer_2_nodes',
+				'actor_layer_3_nodes', 
 				'critic_layer_1_nodes', 
 				'critic_layer_2_nodes', 
+				'critic_layer_3_nodes', 
 				'discount_factor', 
 				'actor_learning_rate', 
 				'critic_learning_rate', 
 				'exploration_factor', 
-				'polyak', #Syncrhonized up to this value with the optimizer
-				'actor_layer_1_noisy', # these are boolean and turn on and off the noisynetdense layers
-				'actor_layer_2_noisy',
-				'critic_layer_1_noisy',
-				'critic_layer_2_noisy',]
+				'polyak',] #Syncrhonized up to this value with the optimizer
+
+
+#################################
+# Create layers iteratively		#
+#################################
+def get_layers_list(layer_nodes_list):
+    layers_list = []
+    for nodes in layer_nodes_list:
+        if nodes is 0:
+            break	
+        else:
+            layers_list += [Dense(nodes)]
+    return layers_list
 
 #################################
 # Load the newest parameter set #
@@ -54,12 +65,11 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 ####################
 # Graph Scheduling #
 ####################
-
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(25000)
+schedule_params.improve_steps = EnvironmentSteps(20000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(1)
-schedule_params.heatup_steps = EnvironmentSteps(1000)
+schedule_params.heatup_steps = EnvironmentSteps(5000)
 
 #For testing the opt software sequencing run very short cycles
 #schedule_params.improve_steps = EnvironmentSteps(40)
@@ -91,20 +101,29 @@ agent_params = DDPGAgentParameters()
 agent_params.algorithm = algorithm_params
 agent_params.exploration = exploration_params
 
+#Get layer lists:
+actor_layers_nodes = [int(opt_params_dict['actor_layer_1_nodes']), int(opt_params_dict['actor_layer_2_nodes']), int(opt_params_dict['actor_layer_3_nodes'])]
+critic_layers_nodes = [int(opt_params_dict['critic_layer_1_nodes']), int(opt_params_dict['critic_layer_2_nodes']), int(opt_params_dict['critic_layer_3_nodes'])]
+
+actor_layers = get_layers_list(actor_layers_nodes)
+critic_layers = get_layers_list(critic_layers_nodes)
+
 #Actor 
-agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].scheme = [NoisyNetDense(int(opt_params_dict['actor_layer_1_nodes']))]
-agent_params.network_wrappers['actor'].middleware_parameters.scheme = [Dense(int(opt_params_dict['actor_layer_2_nodes']))]
+agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].scheme = EmbedderScheme.Empty
+agent_params.network_wrappers['actor'].middleware_parameters.scheme = actor_layers
+#[Dense(int(opt_params_dict['actor_layer_2_nodes']))]
 #Critic
 agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].scheme = EmbedderScheme.Empty
 agent_params.network_wrappers['critic'].input_embedders_parameters['action'].scheme = EmbedderScheme.Empty
 #agent_params.network_wrappers['critic'].middleware_parameters = LSTMMiddlewareParameters()
-agent_params.network_wrappers['critic'].middleware_parameters.scheme = [ NoisyNetDense(int(opt_params_dict['critic_layer_1_nodes'])), Dense(int(opt_params_dict['critic_layer_2_nodes']) )]
+agent_params.network_wrappers['critic'].middleware_parameters.scheme = critic_layers
+#[ NoisyNetDense(int(opt_params_dict['critic_layer_1_nodes'])), Dense(int(opt_params_dict['critic_layer_2_nodes']) )]
 
 
 ###############
 # Environment #
 ###############
-env_params = GymVectorEnvironment("Pendulum-v0")
+env_params = GymVectorEnvironment("RoboschoolInvertedPendulumSwingup-v1")
 #env_params = GymVectorEnvironment("VrepHopper-v0")
 #env_params = GymVectorEnvironment("VrepDoubleCartPoleSwingup-v0")
 

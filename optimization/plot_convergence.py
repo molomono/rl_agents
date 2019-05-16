@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 from pylab import savefig
 import pylab
 import pandas as pd
+import GPyOpt
 
-from bayesopt import return_reward, load_params_of_all_trials
+from bayesopt import return_reward, load_params_of_all_trials, boundaries, agent
 
 def plot_convergence(Xdata,best_Y, filename = None):
     '''
@@ -40,7 +41,6 @@ def plot_convergence(Xdata,best_Y, filename = None):
         savefig(filename)
     else:
         plt.show()
-        
         
 if __name__ == '__main__':
     y_vals = return_reward(True)
