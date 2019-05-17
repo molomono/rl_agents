@@ -12,6 +12,9 @@ import GPyOpt
 
 from bayesopt import return_reward, load_params_of_all_trials, boundaries, agent
 
+
+
+
 def plot_convergence(Xdata,best_Y, filename = None):
     '''
     Plots to evaluate the convergence of standard Bayesian optimization algorithms
@@ -44,8 +47,10 @@ def plot_convergence(Xdata,best_Y, filename = None):
         
 if __name__ == '__main__':
     y_vals = return_reward(True)
+    y_vals_norm = return_reward(True,True)
     x_params = load_params_of_all_trials(return_dataframe=True)
-    x_params['Traing Rewards'] = y_vals
+    x_params['Training Rewards'] = y_vals
+    x_params['Normalized Rewards'] = return_reward(True,True)
     print(x_params)
 	
-    plot_convergence(x_params.values, y_vals)
+    plot_convergence(x_params.values, y_vals_norm)

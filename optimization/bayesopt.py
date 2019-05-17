@@ -34,7 +34,7 @@ agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest_2'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest_4'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -51,7 +51,7 @@ boundaries ={'example':
                 {'name': 'layer2_a','type': 'categorical','domain': (0,1,2)}], 
             'ddpg':
                 [{'name': 'actor_layer_1_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
-                {'name': 'actor_layer_2_nodes',     'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
+                {'name': 'actor_layer_2_nodes',     'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
                 {'name': 'actor_layer_3_nodes',     'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
                 {'name': 'critic_layer_1_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
                 {'name': 'critic_layer_2_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
@@ -69,7 +69,7 @@ for i in range(len(boundaries[agent])):
     param_names += [boundaries[agent][i]['name']]
 
 
-def return_reward(return_all_trials = False):
+def return_reward(return_all_trials = False, normalize=False):
     ''' Loads the latest ~/experiments/agent_directory/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
     '''
     # Load the names of all *.csv files in directory
@@ -87,13 +87,25 @@ def return_reward(return_all_trials = False):
         for file_location in file_list:				
             newest_training_data_dataframe = pd.read_csv(file_location)
             # Sum-up and return all values in the 'Training Reward' column
-            Y += [[newest_training_data_dataframe['Training Reward'].sum()]]
+            total_reward = newest_training_data_dataframe['Training Reward'].sum()
+            # Normalize the Training reward by dividing it by the total number of training iterations
+            if normalize:
+                n_training_iterations = newest_training_data_dataframe['Training Iter']
+                print('Number of training iters: ', n_training_iterations.values[-1])
+                total_reward = total_reward/n_training_iterations.values[-1]
+            Y += [[total_reward]]
         return np.asarray(Y)
     else:
         # Load most recent edit
         newest_training_data_dataframe = pd.read_csv(file_list[-1])
         # Sum-up and return all values in the 'Training Reward' column
-        return newest_training_data_dataframe['Training Reward'].sum()
+        total_reward = newest_training_data_dataframe['Training Reward'].sum()
+        # Normalize the Training reward by dividing it by the total number of training iterations
+        if normalize:
+            n_training_iterations = newest_training_data_dataframe['Training Iter']
+            print('Number of training iters: ', n_training_iterations.values[-1])
+            total_reward = total_reward/n_training_iterations.values[-1]
+        return total_reward
 
 
 def run_ai(param_list):
@@ -122,7 +134,7 @@ def run_ai(param_list):
     # Provided the exit flag choose an appropriate action (was an error raised or was execution normal)
     if exit_flag == 0:
        # load the .csv file with the previous execution data and return the sum of training rewards
-       return return_reward()
+       return -return_reward(normalize = True)
     elif exit_flag != 0: 
         print('An error occured while training the AI Agent')
         remove_failed_optimization_iteration()
@@ -174,7 +186,7 @@ if __name__=="__main__":
     '''
     #Define the number of optimization iterations to run.
     initial_datapoints = 5
-    max_iter = 25
+    max_iter = 20
     X = None
     Y = None
 	
@@ -195,7 +207,7 @@ if __name__=="__main__":
             #time.sleep(10)
             pass
            
-        Y = return_reward(return_all_trials = True)
+        Y = -return_reward(return_all_trials = True, normalize=True)
         X = load_params_of_all_trials()
         
         print('Dimensions X: {},  Y: {}'.format(X.shape,Y.shape))
@@ -218,17 +230,14 @@ if __name__=="__main__":
                                                         Initial_design_type = 'latin',
                                                         model_type= 'GP_MCMC',
                                                         acquisition_type='EI_MCMC',
-                                                        maximize = True,
                                                         verbosity = True,
                                                         verbosity_model = True,
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
     print(ai_optimizer.model.model)
     
     #Run optimizer
-    for _ in range(max_iter):
-        ai_optimizer.run_optimization(1)
-        print(ai_optimizer.model.model)
-
+    ai_optimizer.run_optimization(max_iter)
+        
     # Evaluate using ai_optimizer.plot_convergence()
     ai_optimizer.plot_convergence()
 

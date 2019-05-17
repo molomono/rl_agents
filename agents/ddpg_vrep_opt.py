@@ -21,7 +21,7 @@ TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
-log_files_dir = 'ddpg_opt_gymtest_2'
+log_files_dir = 'ddpg_opt_gymtest_4'
 
 ################################
 # Optimizable parameters list: #
@@ -66,10 +66,10 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 # Graph Scheduling #
 ####################
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(20000)
+schedule_params.improve_steps = EnvironmentSteps(15000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(1)
-schedule_params.heatup_steps = EnvironmentSteps(5000)
+schedule_params.heatup_steps = EnvironmentSteps(10000)
 
 #For testing the opt software sequencing run very short cycles
 #schedule_params.improve_steps = EnvironmentSteps(40)
@@ -123,7 +123,7 @@ agent_params.network_wrappers['critic'].middleware_parameters.scheme = critic_la
 ###############
 # Environment #
 ###############
-env_params = GymVectorEnvironment("RoboschoolInvertedPendulumSwingup-v1")
+env_params = GymVectorEnvironment("RoboschoolInvertedDoublePendulum-v1")
 #env_params = GymVectorEnvironment("VrepHopper-v0")
 #env_params = GymVectorEnvironment("VrepDoubleCartPoleSwingup-v0")
 
