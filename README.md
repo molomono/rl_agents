@@ -13,14 +13,16 @@ Find optimal hyperparameters using the following equation:
 
 <img src="./images/equations/hyperparameter_tuning.svg">
 
-<img src="./images/equations/func.svg"> is defined as the sum of 'Total rewards' for all episodes in a training cycle. 
+<img src="./images/equations/func.svg"> is defined as the average sum of 'Training rewards' for all episodes in a training cycle. 
+
+<img src="./images/equation/sum_total_reward.svg>
 Here are some reasons for this:
 - Very Easy to implement
-- Optimizes for faster learning
-- Optimizes for better/more stable learning
-- Optimizes for maximum reward
+- Quantifies learning rate, faster is better
+- Quantifies stable learning, continual progress is better
+- Quantifies asymptotic performance, the higher the final performance the better
 
-Of course there is a possibility that a local-maximum is found, but in my experience this is sufficient in achieving acceptable results.
+Of course there is a possibility that a local-maximum is found, but in my experience this metric is sufficient in achieving acceptable results.
 
 ### How it is implemented: 
 Using the library GPyOpt, a gaussian process bayesian optimizer is constructed the two mandatory params that must be passed are:
