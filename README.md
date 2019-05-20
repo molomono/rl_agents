@@ -13,9 +13,12 @@ Find optimal hyperparameters using the following equation:
 
 <img src="./images/equations/hyperparameter_tuning.svg">
 
-<img src="./images/equations/func.svg"> is defined as the average sum of 'Training rewards' for all episodes in a training cycle. 
+<img src="./images/equations/func.svg"> is defined as the averaged sum of 'Training rewards' for all episodes in a training cycle. 
 
-<img src="./images/equation/sum_total_reward.svg>
+<img src="./images/equations/sum_total_reward_averaged.svg">
+E: is the number of training episodes and T is the total number of training iterations.
+
+
 Here are some reasons for this:
 - Very Easy to implement
 - Quantifies learning rate, faster is better
@@ -52,5 +55,4 @@ This means that any Agent realized in RL Coach can easily be optimzed using baye
 
 Goals for in the future if i have time:
 - Implement multi-agent optimization techniques
-- Pass RL algorithms themselves as a hyper-parameter in an attempt to perform AutoRL.
-- Implement CEM and Particle Swarm Optimization as alternate optimization algorithms.
+- Implement CMA-ES as an alternate optimization method
