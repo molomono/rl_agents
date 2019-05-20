@@ -27,6 +27,19 @@ IMPORTANT:
 	--> It looks like after it takes all the init-datapoints it didn't start the sequence of modeling and infering, it just provided the same prediction step after step 
 	I NEED TO FIX THIS^^^
 	Weirdly enough it hangs up on predicting the same parameters that were used for the initial trial.
+	NOTES:
+	After some exra research it seems that EI might be over-confident, this combined with the noisy evaluations is causing poor convergence.
+	Possible solutions: 
+		1. Rewrite the optimizer to the Modular method
+		2. Play with different acquisition and evaluation methods --> Entropy acquistion and Batch sampling methods.
+		
+	PS: Batch sampling seems computationally 'expensive' however especially the Local Penalty method seems promising to,
+	reduce noise and improve convergence.	
+	
+	See: https://github.com/SheffieldML/GPyOpt/blob/master/manual/GPyOpt_constrained_optimization.ipynb
+		 https://github.com/SheffieldML/GPyOpt/blob/master/manual/GPyOpt_entropy_search.ipynb
+		
+	#i should also implement a Toy equation just to make sure GPyOpt is doing what it should be doing
 '''
 home_path = os.path.expanduser('~')
 
@@ -34,7 +47,7 @@ agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest_4'}
+agent_opt_dir = {'ddpg': 'ddpg_opt_gymtest_6'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -50,24 +63,23 @@ boundaries ={'example':
                 {'name': 'layer1_a','type': 'categorical','domain': (0,1,2)}, #['tanh','relu','linear']
                 {'name': 'layer2_a','type': 'categorical','domain': (0,1,2)}], 
             'ddpg':
-                [{'name': 'actor_layer_1_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
-                {'name': 'actor_layer_2_nodes',     'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
-                {'name': 'actor_layer_3_nodes',     'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
-                {'name': 'critic_layer_1_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
-                {'name': 'critic_layer_2_nodes',    'type': 'discrete',   'domain': (32, 64, 128, 256)}, 
-                {'name': 'critic_layer_3_nodes',    'type': 'discrete',   'domain': (0, 32, 64, 128, 256)}, 
-                {'name': 'discount_factor',         'type': 'continuous', 'domain': (0.8,1.0)}, 
-                {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.0001, 0.1)}, 
-                {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.1)}, 
-                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.1,3.0)},
-                {'name': 'polyak',      			'type': 'continuous', 'domain': (0.001,0.5)}],
+                [{'name': 'actor_layer_1_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3)}, 
+                {'name': 'actor_layer_2_nodes',     'type': 'categorical',   'domain': (0, 1, 2, 3, 4)}, 
+                {'name': 'actor_layer_3_nodes',     'type': 'categorical',   'domain': (0, 1, 2, 3, 4)}, 
+                {'name': 'critic_layer_1_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3)}, 
+                {'name': 'critic_layer_2_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3)}, 
+                {'name': 'critic_layer_3_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3, 4)}, 
+                {'name': 'discount_factor',         'type': 'continuous', 'domain': (0.9,1.0)}, 
+                {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.0001, 0.5)}, 
+                {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.5)}, 
+                {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.01,3.0)},
+                {'name': 'polyak',      			'type': 'continuous', 'domain': (0.0001,0.5)}],
             }
 
 #Retrieve the names of all the parameter variables being tuned:
 param_names = []
 for i in range(len(boundaries[agent])):
     param_names += [boundaries[agent][i]['name']]
-
 
 def return_reward(return_all_trials = False, normalize=False):
     ''' Loads the latest ~/experiments/agent_directory/worker_xxx.csv from the logged training data and returns the sum of all training rewards for that iteration.
@@ -186,7 +198,7 @@ if __name__=="__main__":
     '''
     #Define the number of optimization iterations to run.
     initial_datapoints = 5
-    max_iter = 20
+    max_iter = 25
     X = None
     Y = None
 	
@@ -222,6 +234,7 @@ if __name__=="__main__":
 	
     print("Number of initial datapoints before Bayesian Optimization: {}".format(initial_datapoints))
 	
+	
     #Configure optimizer and set the number of optimization steps
     ai_optimizer = GPyOpt.methods.BayesianOptimization(run_ai, domain=boundaries[agent],
                                                         initial_design_numdata = initial_datapoints,   # Number of initial datapoints before optimizing
@@ -232,6 +245,7 @@ if __name__=="__main__":
                                                         acquisition_type='EI_MCMC',
                                                         verbosity = True,
                                                         verbosity_model = True,
+                                                        exact_feval = False,
                                                         normalize_Y = True) #http://nbviewer.jupyter.org/github/SheffieldML/GPyOpt/blob/devel/manual/GPyOpt_mixed_domain.ipynb
     print(ai_optimizer.model.model)
     

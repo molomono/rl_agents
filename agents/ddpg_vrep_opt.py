@@ -21,7 +21,11 @@ TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
-log_files_dir = 'ddpg_opt_gymtest_4'
+
+def get_layer_nodes_from_categories(category_index):
+	return [32, 64, 128, 256, 0][int(category_index)]
+
+log_files_dir = 'ddpg_batch_opt_test_1'
 
 ################################
 # Optimizable parameters list: #
@@ -66,9 +70,9 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 # Graph Scheduling #
 ####################
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(15000)
+schedule_params.improve_steps = EnvironmentSteps(30000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
-schedule_params.evaluation_steps = EnvironmentEpisodes(1)
+schedule_params.evaluation_steps = EnvironmentEpisodes(5)
 schedule_params.heatup_steps = EnvironmentSteps(10000)
 
 #For testing the opt software sequencing run very short cycles
@@ -102,8 +106,12 @@ agent_params.algorithm = algorithm_params
 agent_params.exploration = exploration_params
 
 #Get layer lists:
-actor_layers_nodes = [int(opt_params_dict['actor_layer_1_nodes']), int(opt_params_dict['actor_layer_2_nodes']), int(opt_params_dict['actor_layer_3_nodes'])]
-critic_layers_nodes = [int(opt_params_dict['critic_layer_1_nodes']), int(opt_params_dict['critic_layer_2_nodes']), int(opt_params_dict['critic_layer_3_nodes'])]
+actor_layers_nodes = [get_layer_nodes_from_categories(opt_params_dict['actor_layer_1_nodes']),
+                      get_layer_nodes_from_categories(opt_params_dict['actor_layer_2_nodes']), 
+                      get_layer_nodes_from_categories(opt_params_dict['actor_layer_3_nodes'])]
+critic_layers_nodes =[get_layer_nodes_from_categories(opt_params_dict['critic_layer_1_nodes']), 
+                      get_layer_nodes_from_categories(opt_params_dict['critic_layer_2_nodes']), 
+                      get_layer_nodes_from_categories(opt_params_dict['critic_layer_3_nodes'])]
 
 actor_layers = get_layers_list(actor_layers_nodes)
 critic_layers = get_layers_list(critic_layers_nodes)
