@@ -10,7 +10,7 @@ import pylab
 import pandas as pd
 import GPyOpt
 
-from bayesopt import return_reward, load_params_of_all_trials, boundaries, agent
+from bayesopt_v2 import return_reward, load_params_of_all_trials, boundaries, agent
 
 
 
@@ -52,5 +52,5 @@ if __name__ == '__main__':
     x_params['Training Rewards'] = y_vals
     x_params['Normalized Rewards'] = return_reward(True,True)
     print(x_params)
-	
+    
     plot_convergence(x_params.values, y_vals_norm)
