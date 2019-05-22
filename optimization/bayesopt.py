@@ -41,6 +41,7 @@ IMPORTANT:
 		
 	#i should also implement a Toy equation just to make sure GPyOpt is doing what it should be doing
 '''
+
 home_path = os.path.expanduser('~')
 
 agent = 'ddpg'

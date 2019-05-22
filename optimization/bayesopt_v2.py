@@ -15,6 +15,7 @@ import os
 import glob
 import pickle
 import time
+from GPyOpt.util.mcmc_sampler import AffineInvariantEnsembleSampler
 
 ''' List of WIP parts of this script
 TODO: move all the definitions such as boundaries and paths to a seperate .py file
@@ -48,7 +49,7 @@ agent = 'ddpg'
 
 #Append new agents to these dictionaries:
 agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_batch_opt_test_1'}
+agent_opt_dir = {'ddpg': 'ddpg_vrep_0'}
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -267,22 +268,27 @@ if __name__=="__main__":
     objective = GPyOpt.core.task.SingleObjective(run_ai)
 	
 	# Choose a kernel, either RBF or Matern32/Matern52 usally works well enough
-    kern = GPy.kern.RBF(input_dim = X.shape[1], variance = 1., lengthscale = 1.)
+    kern = GPy.kern.RBF(input_dim = X.shape[1], variance = 0.5, lengthscale = 0.1)
 	
 	# Choose the model type
-    model = GPyOpt.models.GPModel(kern, noise_var=1e-3, exact_feval=False, optimize_restarts=10, verbose=False)
+    model = GPyOpt.models.GPModel(kern, noise_var=1e-1, exact_feval=False, optimize_restarts=10, verbose=False)
 	
 	# Choose the acquisition optimizer
     aquisition_optimizer = GPyOpt.optimization.AcquisitionOptimizer(param_space)
 	
+	# Entropy search:
+    sampler = AffineInvariantEnsembleSampler(param_space)
+    acquisition = GPyOpt.acquisitions.AcquisitionEntropySearch(model, param_space, sampler)
+	
 	# Choose the acquisition function
-    acquisition_method = GPyOpt.acquisitions.AcquisitionMPI(model, param_space, optimizer = aquisition_optimizer)
-    # Adding local penalization to the aquisition function
-    acquisition = GPyOpt.acquisitions.AcquisitionLP(model, param_space, acquisition=acquisition_method, optimizer = aquisition_optimizer)
+    #acquisition = GPyOpt.acquisitions.AcquisitionEI(model, param_space, optimizer = aquisition_optimizer)
+    
+	# Adding local penalization to the aquisition function
+    #acquisition = GPyOpt.acquisitions.AcquisitionLP(model, param_space, acquisition=acquisition_method, optimizer = aquisition_optimizer)
 
 	# Choose a evaluation method
-    #evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition, batch_size = 5)
-    evaluator = GPyOpt.core.evaluators.LocalPenalization(acquisition, batch_size = 5)
+    evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition, batch_size = 5)
+    #evaluator = GPyOpt.core.evaluators.LocalPenalization(acquisition, batch_size = 3)
     
 	
 	##################################### Constructing the actual optimizer object

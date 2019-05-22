@@ -25,7 +25,7 @@ TODO: Test if this script can be correctly run from the bayesopt script
 def get_layer_nodes_from_categories(category_index):
 	return [32, 64, 128, 256, 0][int(category_index)]
 
-log_files_dir = 'ddpg_batch_opt_test_1'
+log_files_dir = 'ddpg_vrep_0'
 
 ################################
 # Optimizable parameters list: #
@@ -70,10 +70,10 @@ opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-i
 # Graph Scheduling #
 ####################
 schedule_params = ScheduleParameters()
-schedule_params.improve_steps = EnvironmentSteps(30000)
+schedule_params.improve_steps = EnvironmentSteps(15000)
 schedule_params.steps_between_evaluation_periods = EnvironmentEpisodes(20)
 schedule_params.evaluation_steps = EnvironmentEpisodes(5)
-schedule_params.heatup_steps = EnvironmentSteps(10000)
+schedule_params.heatup_steps = EnvironmentSteps(1000)
 
 #For testing the opt software sequencing run very short cycles
 #schedule_params.improve_steps = EnvironmentSteps(40)
@@ -131,7 +131,8 @@ agent_params.network_wrappers['critic'].middleware_parameters.scheme = critic_la
 ###############
 # Environment #
 ###############
-env_params = GymVectorEnvironment("RoboschoolInvertedDoublePendulum-v1")
+env_params = GymVectorEnvironment("VrepBalanceBotNoise-v0")
+#env_params = GymVectorEnvironment("RoboschoolInvertedDoublePendulum-v1")
 #env_params = GymVectorEnvironment("VrepHopper-v0")
 #env_params = GymVectorEnvironment("VrepDoubleCartPoleSwingup-v0")
 

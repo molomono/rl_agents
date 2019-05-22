@@ -9,10 +9,10 @@ from pylab import savefig
 import pylab
 import pandas as pd
 import GPyOpt
+import GPy
+import seaborn as sns
 
 from bayesopt_v2 import return_reward, load_params_of_all_trials, boundaries, agent
-
-
 
 
 def plot_convergence(Xdata,best_Y, filename = None):
@@ -54,3 +54,21 @@ if __name__ == '__main__':
     print(x_params)
     
     plot_convergence(x_params.values, y_vals_norm)
+
+    keys = x_params.keys()
+    print(keys)
+    
+    g = sns.PairGrid(data = x_params[list(keys)[:]], diag_sharey=False)
+    g.map_upper(sns.kdeplot)
+    g.map_lower(sns.scatterplot)
+    g.map_diag(sns.kdeplot, lw=3)
+    plt.show()
+    
+    #sns.pairplot(data = x_params[list(keys)[-7:]], diag_kind = 'kde')
+    #sns.pairplot(data = x_params[list(keys)[-7:]], x_vars = list(keys)[-7:-2], y_vars = list(keys)[-1], diag_kind='kde')
+    #plt.show()
+    
+    #sns.swarmplot(x = list(keys)[-7:], y = list(keys[-1]), hue = list(keys)[-1], data = x_params)
+    #plt.show()
+    
+    
