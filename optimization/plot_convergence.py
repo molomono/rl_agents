@@ -14,6 +14,7 @@ import seaborn as sns
 
 from bayesopt_v2 import return_reward, load_params_of_all_trials, boundaries, agent
 
+agent_opt_dir = {'ddpg': 'ddpg_batch_opt_test_1'}
 
 def plot_convergence(Xdata,best_Y, filename = None):
     '''
@@ -64,11 +65,6 @@ if __name__ == '__main__':
     g.map_diag(sns.kdeplot, lw=3)
     plt.show()
     
-    #sns.pairplot(data = x_params[list(keys)[-7:]], diag_kind = 'kde')
-    #sns.pairplot(data = x_params[list(keys)[-7:]], x_vars = list(keys)[-7:-2], y_vars = list(keys)[-1], diag_kind='kde')
-    #plt.show()
-    
-    #sns.swarmplot(x = list(keys)[-7:], y = list(keys[-1]), hue = list(keys)[-1], data = x_params)
-    #plt.show()
-    
+    sns.heatmap(data = x_params.corr())
+    plt.show()
     

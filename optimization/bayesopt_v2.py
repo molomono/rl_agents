@@ -45,11 +45,15 @@ IMPORTANT:
 '''
 home_path = os.path.expanduser('~')
 
-agent = 'ddpg'
+agent = 'ppo'
 
 #Append new agents to these dictionaries:
-agent_preset = {'ddpg': 'ddpg_vrep_opt.py'}
-agent_opt_dir = {'ddpg': 'ddpg_vrep_0'}
+agent_preset = {'ddpg': 'ddpg_vrep_opt.py',
+				'ppo': 'ppo_vrep_opt.py'}
+				
+agent_opt_dir = {'ddpg': 'ddpg_vrep_0',
+				 'ppo': 'ppo_vrep_opt_0'}
+
 
 
 #TODO: Modify the bounds define the bounding box for the hyperparameters
@@ -76,6 +80,19 @@ boundaries ={'example':
                 {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.5)}, 
                 {'name': 'exploration_factor',      'type': 'continuous', 'domain': (0.01,3.0)},
                 {'name': 'polyak',      			'type': 'continuous', 'domain': (0.0001,0.5)}],
+            'ppo':
+				[{'name': 'actor_layer_1_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3)}, 
+                {'name': 'actor_layer_2_nodes',     'type': 'categorical',   'domain': (0, 1, 2, 3, 4)}, 
+                {'name': 'actor_layer_3_nodes',     'type': 'categorical',   'domain': (0, 1, 2, 3, 4)}, 
+                {'name': 'critic_layer_1_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3)}, 
+                {'name': 'critic_layer_2_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3)}, 
+                {'name': 'critic_layer_3_nodes',    'type': 'categorical',   'domain': (0, 1, 2, 3, 4)}, 
+                {'name': 'discount_factor',         'type': 'continuous', 'domain': (0.9,1.0)}, 
+                {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.0001, 0.05)}, 
+                {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.0001, 0.05)}, 
+                {'name': 'gae_lambda',    	  		'type': 'continuous', 'domain': (0.8, 0.999)},
+                {'name': 'beta_entropy', 			'type': 'continuous', 'domain': (0.0001,0.05)},
+                {'name': 'clip_likelihood_ratio', 	'type': 'continuous', 'domain': (0.01, 1.0)},],
             }
 
 #Retrieve the names of all the parameter variables being tuned:
@@ -274,17 +291,20 @@ if __name__=="__main__":
     model = GPyOpt.models.GPModel(kern, noise_var=1e-1, exact_feval=False, optimize_restarts=10, verbose=False)
 	
 	# Choose the acquisition optimizer
-    aquisition_optimizer = GPyOpt.optimization.AcquisitionOptimizer(param_space)
+    acquisition_optimizer = GPyOpt.optimization.AcquisitionOptimizer(param_space)
 	
 	# Entropy search:
-    sampler = AffineInvariantEnsembleSampler(param_space)
-    acquisition = GPyOpt.acquisitions.AcquisitionEntropySearch(model, param_space, sampler)
+    #ei = GPyOpt.acquisitions.AcquisitionEI(model, param_space, optimizer=acquisition_optimizer)
+    #proposal_function = lambda x_: np.clip(np.log(ei._compute_acq(x_)), 0., np.PINF)
+	
+    #sampler = AffineInvariantEnsembleSampler(param_space)
+    #acquisition = GPyOpt.acquisitions.AcquisitionEntropySearch(model, param_space, sampler, optimizer = acquisition_optimizer, burn_in_steps=10, num_samples=100, proposal_function = proposal_function)
 	
 	# Choose the acquisition function
-    #acquisition = GPyOpt.acquisitions.AcquisitionEI(model, param_space, optimizer = aquisition_optimizer)
+    acquisition = GPyOpt.acquisitions.AcquisitionLCB(model, param_space, optimizer = acquisition_optimizer)
     
 	# Adding local penalization to the aquisition function
-    #acquisition = GPyOpt.acquisitions.AcquisitionLP(model, param_space, acquisition=acquisition_method, optimizer = aquisition_optimizer)
+    #acquisition = GPyOpt.acquisitions.AcquisitionLP(model, param_space, acquisition=acquisition_method, optimizer = acquisition_optimizer)
 
 	# Choose a evaluation method
     evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition, batch_size = 5)

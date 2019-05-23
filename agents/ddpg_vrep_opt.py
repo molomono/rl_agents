@@ -52,7 +52,7 @@ def get_layers_list(layer_nodes_list):
         if nodes is 0:
             break	
         else:
-            layers_list += [Dense(nodes)]
+            layers_list += [NoisyNetDense(nodes)]
     return layers_list
 
 #################################
