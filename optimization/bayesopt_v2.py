@@ -47,15 +47,16 @@ IMPORTANT:
 '''
 
 import sys
-from constants_and_spaces import *
-from interfacing_functions import * 
-
+ 
 parser = argparse.ArgumentParser(description='Optimization algorithm arguments.')
 parser.add_argument('--algorithm', metavar='str', type=str, help='Choice of machine learning algorithm.')
 parser.add_argument('--remove-last', type=str, help='Use this flag to remove the last entery in the hyperparameter log. Use values X (hyperparameters), Y (training log-file) or XY for both')
     
 args = parser.parse_args()
 agent = args.algorithm
+
+from constants_and_spaces import *
+from interfacing_functions import *
 
 if __name__=="__main__":
     ''' Main function instantiates a gaussian process optimizer from the GPyOpt package and performs Bayesian Optimization
