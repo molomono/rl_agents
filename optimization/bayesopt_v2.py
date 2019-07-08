@@ -76,8 +76,8 @@ if __name__=="__main__":
         remove_param = False 
         remove_log = False
         if args.remove_last is not None:
-            remove_param = print(any('X' in str_val for str_val in args.remove_last))
-            remove_log = print(any('Y' in str_val for str_val in args.remove_last))
+            remove_param = any('X' in str_val for str_val in args.remove_last)
+            remove_log = any('Y' in str_val for str_val in args.remove_last)
         if remove_param or remove_log:
             remove_failed_optimization_iteration(remove_param, remove_log)
         else:
