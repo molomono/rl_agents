@@ -1,4 +1,3 @@
-
 import os 
 
 home_path = os.path.expanduser('~')
@@ -48,4 +47,11 @@ boundaries ={'example':
                 {'name': 'gae_lambda',    	  		'type': 'continuous', 'domain': (0.8, 0.999)},
                 {'name': 'beta_entropy', 			'type': 'continuous', 'domain': (0.0001,0.05)},
                 {'name': 'clip_likelihood_ratio', 	'type': 'continuous', 'domain': (0.01, 1.0)},],
+			'td3':
+				[{'name': 'discount_factor',        'type': 'continuous', 'domain': (0.95,1.0)}, 
+                {'name': 'actor_learning_rate',     'type': 'continuous', 'domain': (0.00001, 0.01)}, 
+                {'name': 'critic_learning_rate',    'type': 'continuous', 'domain': (0.00001, 0.01)},
+                {'name': 'actor_l2',     			'type': 'continuous', 'domain': (0.0000001, 0.01)}, 
+                {'name': 'critic_l2',    			'type': 'continuous', 'domain': (0.0000001, 0.01)},
+                {'name': 'polyak',      			'type': 'continuous', 'domain': (0.00001,0.1)}],
             }
