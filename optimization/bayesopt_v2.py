@@ -9,12 +9,13 @@
 import pandas as pd 
 import sys
 import numpy as np 
-import GPyOpt
-import GPy
+
 import os
 import glob
-import pickle
 import time
+
+import GPyOpt
+import GPy
 from GPyOpt.util.mcmc_sampler import AffineInvariantEnsembleSampler
 import argparse
 
