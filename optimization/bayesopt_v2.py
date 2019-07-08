@@ -235,8 +235,8 @@ if __name__=="__main__":
     '''
 
     global agent
-    
-    agent = sys.argv[1]
+    if any('--algorithm' in s for s in sys.argv):
+        agent = s
     #Define the number of optimization iterations to run.
     initial_datapoints = 5
     max_iter = 25
