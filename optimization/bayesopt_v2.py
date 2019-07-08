@@ -73,9 +73,10 @@ if __name__=="__main__":
         
         #TODO: Use the argument --remove-last to remove the last logged iteration
         #Function deals with the problem caused by having an incomplete log file due to crashing of a training iteration.
-        remove_param = print(any('X' in str_val for str_val in args.remove_last))
-        remove_log = print(any('Y' in str_val for str_val in args.remove_last))
-    
+        
+        if args.remove_last is not None:
+            remove_param = print(any('X' in str_val for str_val in args.remove_last))
+            remove_log = print(any('Y' in str_val for str_val in args.remove_last))
         if remove_param or remove_log:
             remove_failed_optimization_iteration(remove_param, remove_log)
         else:
