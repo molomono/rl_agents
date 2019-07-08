@@ -7,7 +7,7 @@ import glob
 import time
 
 from constants_and_spaces import *
-
+from bayesopt_v2 import agent
 
 #Retrieve the names of all the parameter variables being tuned:
 param_names = []
