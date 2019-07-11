@@ -137,7 +137,7 @@ if __name__=="__main__":
     #acquisition = GPyOpt.acquisitions.AcquisitionLP(model, param_space, acquisition=acquisition_method, optimizer = acquisition_optimizer)
 
 	# Choose a evaluation method
-    evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition, batch_size = 5)
+    evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition, batch_size = 3)
     #evaluator = GPyOpt.core.evaluators.LocalPenalization(acquisition, batch_size = 3)
     
 	

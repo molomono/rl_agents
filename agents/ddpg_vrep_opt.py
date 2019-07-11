@@ -20,12 +20,17 @@ TODO: Add more variables to the opt_params list
 TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
+import sys
+
+sys.path.insert(0, os.path.abspath('../optimization'))
+from constants_and_spaces import *
+
+agent = 'ddpg'
+log_files_dir = agent_opt_dir[agent]
 
 
 def get_layer_nodes_from_categories(category_index):
 	return [32, 64, 128, 256, 0][int(category_index)]
-
-log_files_dir = 'ddpg_vrep_0'
 
 ################################
 # Optimizable parameters list: #

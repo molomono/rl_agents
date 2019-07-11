@@ -105,13 +105,13 @@ exploration_params.noise_schedule = PieceWiseSchedule(
 #Network Parameters
 #Actor Paramters
 actor_params = TD3ActorNetworkParameters()
-actor_params.learning_rate = 0.005#0.002 #opt_params_dict['actor_learning_rate'] # 0.075
+actor_params.learning_rate = 0.00025 * 2#0.002 #opt_params_dict['actor_learning_rate'] # 0.075
 actor_params.replace_mse_with_huber_loss = True
 #actor_params.learning_rate_decay_rate = 0.9999
 #actor_params.learning_rate_decay_steps = 5
 #Critic Parameters
 critic_params = TD3CriticNetworkParameters(num_q_networks = 2)
-critic_params.learning_rate = 0.05 #0.001 #opt_params_dict['critic_learning_rate']
+critic_params.learning_rate = 0.0005*2 #0.001 #opt_params_dict['critic_learning_rate']
 critic_params.replace_mse_with_huber_loss = True
 #critic_params.learning_rate_decay_rate = 0.9985
 #critic_params.learning_rate_decay_steps = 100
@@ -142,7 +142,7 @@ agent_params.network_wrappers['actor'].middleware_parameters.dropout_rate = 0.5
 agent_params.network_wrappers['actor'].middleware_parameters.activation_function = 'tanh'
 
 agent_params.network_wrappers['actor'].l2_regularization = 0.000001
-agent_params.network_wrappers['actor'].batch_size = 64
+agent_params.network_wrappers['actor'].batch_size = 32
 
 #Critic
 agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].scheme = [critic_layers[0]]
@@ -155,13 +155,13 @@ agent_params.network_wrappers['critic'].middleware_parameters.scheme = critic_la
 agent_params.network_wrappers['critic'].middleware_parameters.dropout_rate = 0.5
 
 agent_params.network_wrappers['critic'].l2_regularization = 0.00000001
-agent_params.network_wrappers['critic'].batch_size = 64
+agent_params.network_wrappers['critic'].batch_size = 32
 
 agent_params.exploration = exploration_params
 ###############
 # Environment #
 ###############
-env_params = GymVectorEnvironment("VrepBalanceBotNoise-v0")
+env_params = GymVectorEnvironment("VrepBalanceBotBalance-v0")
 
 graph_manager = BasicRLGraphManager(agent_params=agent_params, env_params=env_params,
                                     schedule_params=schedule_params, vis_params=VisualizationParameters(render=False))

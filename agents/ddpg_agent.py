@@ -107,8 +107,8 @@ exploration_params.noise_schedule = PieceWiseSchedule(
 actor_params = DDPGActorNetworkParameters()
 actor_params.learning_rate = 0.0001#*4*2 #0.002 #opt_params_dict['actor_learning_rate'] # 0.075
 actor_params.replace_mse_with_huber_loss = True
-#actor_params.learning_rate_decay_rate = 0.9999
-#actor_params.learning_rate_decay_steps = 5
+actor_params.learning_rate_decay_rate = 0.75
+actor_params.learning_rate_decay_steps = 15000
 
 #Critic Parameters
 critic_params = DDPGCriticNetworkParameters()
