@@ -1,0 +1,1 @@
+To use these presets a symbolic link must be made from the RL-Coach preset folder to this location.
