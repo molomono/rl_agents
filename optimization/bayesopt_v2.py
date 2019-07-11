@@ -70,7 +70,6 @@ if __name__=="__main__":
 	
     #If there are alerady .csv files in the project folder load the dataset X, Y and change the initial deisng numtypes to 0
     if glob.glob(home_path + '/experiments/'+ agent_opt_dir[agent] +'/optimization_parameters.csv'):
-        
         #TODO: Use the argument --remove-last to remove the last logged iteration
         #Function deals with the problem caused by having an incomplete log file due to crashing of a training iteration.
         remove_param = False 
@@ -80,13 +79,8 @@ if __name__=="__main__":
             remove_log = any('Y' in str_val for str_val in args.remove_last)
         if remove_param or remove_log:
             remove_failed_optimization_iteration(remove_param, remove_log)
-        else:
-            #print('WARNING---------------------WARNING')
-            #print('Important notice, the prior trials are loaded but if a trial was executed during training')
-            #print('run this script once with .py script with argument --remove-last param and/or log')
-            #time.sleep(10)
-            pass
-           
+        
+        #Load existing data
         Y = -return_reward(return_all_trials = True, normalize=True)
         X = load_params_of_all_trials()
         
