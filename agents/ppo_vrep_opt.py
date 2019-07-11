@@ -20,7 +20,7 @@ TODO: Add more variables to the opt_params list
 TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
-
+import sys
 sys.path.insert(0, os.path.abspath('../optimization'))
 from constants_and_spaces import *
 agent = 'ppo'
