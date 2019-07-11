@@ -166,21 +166,21 @@ env_params = GymVectorEnvironment("VrepBalanceBotBalance-v0")
 graph_manager = BasicRLGraphManager(agent_params=agent_params, env_params=env_params,
                                     schedule_params=schedule_params, vis_params=VisualizationParameters(render=False))
 
-import os
-from rl_coach.base_parameters import TaskParameters, Frameworks
+#import os
+#from rl_coach.base_parameters import TaskParameters, Frameworks
 
-log_path = home_path+'/experiments/'+log_files_dir
-if not os.path.exists(log_path):
-    os.makedirs(log_path)
+#log_path = home_path+'/experiments/'+log_files_dir
+#if not os.path.exists(log_path):
+#    os.makedirs(log_path)
     
-task_parameters = TaskParameters(framework_type=Frameworks.tensorflow, 
-                                evaluate_only=False,
-                                experiment_path=log_path)
+#task_parameters = TaskParameters(framework_type=Frameworks.tensorflow, 
+#                                evaluate_only=False,
+#                                experiment_path=log_path)
 
-task_parameters.__dict__['checkpoint_save_secs'] = 300
-task_parameters.__dict__['verbosity'] = 'low'
+#task_parameters.__dict__['checkpoint_save_secs'] = 300
+#task_parameters.__dict__['verbosity'] = 'low'
 
-graph_manager.create_graph(task_parameters)
+#graph_manager.create_graph(task_parameters)
 
-graph_manager.improve()
-graph_manager.close()
+#graph_manager.improve()
+#graph_manager.close()
