@@ -23,6 +23,7 @@ TODO: add more tunable parameters
 TODO: Test if this script can be correctly run from the bayesopt script
 '''
 
+print("V1.0.1")
 
 def get_layer_nodes_from_categories(category_index):
 	return [32, 64, 128, 256, 0][int(category_index)]
@@ -62,12 +63,6 @@ def get_layers_list(layer_nodes_list):
 #################################
 import pandas as pd
 home_path = os.path.expanduser('~')
-#param_df = pd.read_csv(home_path+'/experiments/'+ log_files_dir +'/optimization_parameters.csv')
-#opt_params_dict = param_df.tail(1).to_dict('index')
-#opt_params_dict = opt_params_dict[list(opt_params_dict.keys())[0]] #removes df-index from dict
-
-# example acces parameter value:
-# p_val = opt_params_dict['actor_layer_1_nodes']
 
 ####################
 # Graph Scheduling #
@@ -87,7 +82,7 @@ schedule_params.heatup_steps = EnvironmentSteps(1000)
 # Algorithm #
 #############
 algorithm_params = DDPGAlgorithmParameters()
-algorithm_params.discount = 0.999#0.934 #opt_params_dict['discount_factor']
+algorithm_params.discount = 0.999 #0.934 #opt_params_dict['discount_factor']
 algorithm_params.rate_for_copying_weights_to_target = 0.0001 #opt_params_dict['polyak']
 
 #########
@@ -126,7 +121,7 @@ agent_params.memory = PrioritizedExperienceReplayParameters()
 agent_params.memory.beta = LinearSchedule(0.4, 1, 125000)
 
 #Defining the layers
-actor_layers = get_layers_list([24,24,24])
+actor_layers = get_layers_list([48,48,24]) # 24 24 24
 critic_layers = get_layers_list([48,48,32])
 
 #actor_layers = [NoisyNetDense(48),NoisyNetDense(24),NoisyNetDense(24)]
@@ -134,12 +129,12 @@ critic_layers = get_layers_list([48,48,32])
 agent_params.network_wrappers['actor'] = actor_params
 agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].scheme = actor_layers[:2]
 agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].dropout_rate = 0.5
-agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].activation_function = 'relu'
+agent_params.network_wrappers['actor'].input_embedders_parameters['observation'].activation_function = 'selu' # relu
 
 #agent_params.network_wrappers['actor'].middleware_parameters = LSTMMiddlewareParameters(number_of_lstm_cells=64, dropout_rate = 0.5)
 agent_params.network_wrappers['actor'].middleware_parameters.scheme = [actor_layers[2]]
 agent_params.network_wrappers['actor'].middleware_parameters.dropout_rate = 0.5
-agent_params.network_wrappers['actor'].middleware_parameters.activation_function = 'tanh'
+agent_params.network_wrappers['actor'].middleware_parameters.activation_function = 'tanh' # tanh
 
 agent_params.network_wrappers['actor'].l2_regularization = 0.000001
 agent_params.network_wrappers['actor'].batch_size = 32
@@ -148,11 +143,17 @@ agent_params.network_wrappers['actor'].batch_size = 32
 agent_params.network_wrappers['critic'] = critic_params
 agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].scheme = critic_layers[:2]
 agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].dropout_rate = 0.5
+agent_params.network_wrappers['critic'].input_embedders_parameters['observation'].activation_function = 'selu' # relu
+
 agent_params.network_wrappers['critic'].input_embedders_parameters['action'].scheme = critic_layers[:1]
 agent_params.network_wrappers['critic'].input_embedders_parameters['action'].dropout_rate = 0.5
+agent_params.network_wrappers['critic'].input_embedders_parameters['action'].activation_function = 'selu' # relu
 
 agent_params.network_wrappers['critic'].middleware_parameters = LSTMMiddlewareParameters(number_of_lstm_cells=64, dropout_rate = 0.5)
 agent_params.network_wrappers['critic'].middleware_parameters.scheme = [critic_layers[2]]
+#agent_params.network_wrappers['critic'].middleware_parameters.scheme = critic_layers
+#agent_params.network_wrappers['critic'].middleware_parameters.dropout_rate = 0.5
+agent_params.network_wrappers['critic'].middleware_parameters.activation_function = 'selu' # relu
 
 agent_params.network_wrappers['critic'].l2_regularization = 0.00000001
 agent_params.network_wrappers['critic'].batch_size = 32
@@ -164,22 +165,3 @@ env_params = GymVectorEnvironment("VrepBalanceBotBalance-v0")
 
 graph_manager = BasicRLGraphManager(agent_params=agent_params, env_params=env_params,
                                     schedule_params=schedule_params, vis_params=VisualizationParameters(render=False))
-
-import os
-from rl_coach.base_parameters import TaskParameters, Frameworks
-
-log_path = home_path+'/experiments/'+log_files_dir
-if not os.path.exists(log_path):
-    os.makedirs(log_path)
-    
-task_parameters = TaskParameters(framework_type=Frameworks.tensorflow, 
-                                evaluate_only=False,
-                                experiment_path=log_path)
-
-task_parameters.__dict__['checkpoint_save_secs'] = 300
-task_parameters.__dict__['verbosity'] = 'low'
-
-graph_manager.create_graph(task_parameters)
-
-graph_manager.improve()
-graph_manager.close()
